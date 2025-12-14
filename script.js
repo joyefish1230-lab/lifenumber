@@ -113,6 +113,33 @@ class NumerologyTriangle {
     }
 
     /**
+     * 【新增】計算內心密碼
+     * 規則: O=1->2, O=2->4, O=3->6, O=4->8, O=5->1, O=6->3, O=7->5, O=8->7, O=9->9
+     */
+    calculateInnerCode(O) {
+        const mapping = {
+            1: 2, 2: 4, 3: 6, 4: 8, 5: 1, 6: 3, 7: 5, 8: 7, 9: 9
+        };
+        return mapping[O] || O; // 找不到對應時保持原值，但根據規則 O 應恆為 1-9
+    }
+
+    /**
+     * 【新增】計算外心密碼
+     * 規則: S + R + T (和的個位數)
+     */
+    calculateOuterCode(S, R, T) {
+        return this.reduceToSingleDigit(S + R + T);
+    }
+
+    /**
+     * 【新增】計算潛意識密碼
+     * 規則: L + I + O (和的個位數)
+     */
+    calculateSubconsciousCode(L, I, O) {
+        return this.reduceToSingleDigit(L + I + O);
+    }
+
+    /**
      * 解析日期為各個位數
      */
     parseDate(year, month, day) {
@@ -180,6 +207,10 @@ class NumerologyTriangle {
         const Q = this.reduceToSingleDigit(N + O);      // 上右外
         const R = this.reduceToSingleDigit(P + Q);      // 上外結果
 
+        const innerCode = this.calculateInnerCode(O);
+        const outerCode = this.calculateOuterCode(S, R, T);
+        const subconsciousCode = this.calculateSubconsciousCode(L, I, O);
+        
         return {
             // 原始數據
             originalDate: { A, B, C, D, E, F, G, H },
@@ -187,7 +218,12 @@ class NumerologyTriangle {
             // 內三角形
             inner: { I, J, K, L, M, N, O },
             // 外三角形
-            outer: { P, Q, R, S, T, U, V, W, X }
+            outer: { P, Q, R, S, T, U, V, W, X },
+            core: {
+                innerCode: innerCode,
+                outerCode: outerCode,
+                subconsciousCode: subconsciousCode
+            }
         };
     }
 
@@ -200,6 +236,9 @@ class NumerologyTriangle {
         
         // 更新結果表格
         this.updateResultsTable(result);
+
+        // 【新增】顯示解析內容
+        this.generateAnalysis(result);
     }
 
     /**
@@ -211,17 +250,19 @@ class NumerologyTriangle {
             if (element) element.textContent = value;
         };
 
+        // 【修改】內心密碼、外心密碼、潛意識密碼的顯示
         updateElement('result-main', result.inner.O);
-        updateElement('result-inner', `${result.inner.O}${result.inner.M}${result.inner.N}`);
-        updateElement('result-outer', `${result.outer.S}${result.outer.R}${result.outer.T}`);
-        updateElement('result-subconscious', `${result.inner.L}${result.inner.I}${result.inner.O}`);
+        updateElement('result-inner', result.core.innerCode); // 使用新的內心密碼
+        updateElement('result-outer', result.core.outerCode); // 使用新的外心密碼
+        updateElement('result-subconscious', result.core.subconsciousCode); // 使用新的潛意識密碼
+
+        // 保持其他項目不變 (但根據您的新定義，這些可能已經不再使用，不過這裡仍保留原邏輯)
         updateElement('result-father', `${result.inner.I}${result.inner.J}${result.inner.M}`);
         updateElement('result-mother', `${result.inner.K}${result.inner.L}${result.inner.N}`);
         updateElement('result-work', `${result.outer.T}${result.outer.S}${result.outer.U}`);
         updateElement('result-family', `${result.outer.Q}${result.outer.P}${result.outer.R}`);
         updateElement('result-elder', `${result.outer.V}${result.outer.W}${result.outer.X}`);
     }
-
     /**
      * 繪製生命數字三角形 (使用模板圖片)
      */
@@ -437,6 +478,111 @@ class NumerologyTriangle {
             // 由於不能使用 alert，這裡僅在控制台顯示錯誤
             console.log('下載失敗，請稍後再試'); 
         }
+    }
+
+    /**
+     * 【新增】生成解析文字內容
+     */
+    generateAnalysis(result) {
+        const analysisContainer = document.getElementById('analysis-section');
+        if (!analysisContainer) return;
+
+        const mainCode = result.inner.O;
+        const subconsciousCode = result.core.subconsciousCode;
+        const innerCode = result.core.innerCode;
+        const outerCode = result.core.outerCode;
+
+        // 1. 主性格解析 (O)
+        const mainPersonalityText = this.getMainPersonalityAnalysis(mainCode);
+        const mainAnalysis = this.createAnalysisBlock('主性格', mainCode, `代表著主格，佔一個人60%的性格，是一個人在日常生活中最常展現給他人看的性格樣貌\n\n${mainPersonalityText}`);
+
+        // 2. 潛意識密碼解析 (L + I + O)
+        const subconsciousPersonalityText = this.getSubconsciousAnalysis(subconsciousCode);
+        const subconsciousAnalysis = this.createAnalysisBlock('潛意識密碼', subconsciousCode, `代表著主格，佔一個人60%的性格，是一個人在日常生活中最常展現給他人看的性格樣貌 (請注意，此段文字應為您的要求，與上方主性格的描述相同)\n\n${subconsciousPersonalityText}`);
+
+        // 3. 內心密碼解析 (Inner Code)
+        const innerCodeText = this.getInnerCodeAnalysis(innerCode);
+        const innerAnalysis = this.createAnalysisBlock('內心密碼', innerCode, `內心深處的感受與需求，較少透漏給他人\n\n${innerCodeText}`);
+
+        // 4. 外心密碼解析 (Outer Code)
+        const outerCodeText = this.getOuterCodeAnalysis(outerCode);
+        const outerAnalysis = this.createAnalysisBlock('外心密碼', outerCode, outerCodeText);
+
+
+        analysisContainer.innerHTML = ''; // 清空舊內容
+        analysisContainer.appendChild(mainAnalysis);
+        analysisContainer.appendChild(subconsciousAnalysis);
+        analysisContainer.appendChild(innerAnalysis);
+        analysisContainer.appendChild(outerAnalysis);
+    }
+
+    /**
+     * 【新增】創建解析區塊的 HTML 元素
+     */
+    createAnalysisBlock(title, code, content) {
+        const block = document.createElement('div');
+        block.className = 'analysis-block';
+        block.innerHTML = `
+            <h3>${title}：<span class="code-value">${code}</span></h3>
+            <p class="description-text">${content.replace(/\n/g, '<br>')}</p>
+        `;
+        return block;
+    }
+
+    /**
+     * 【新增】主性格解析邏輯 (O)
+     */
+    getMainPersonalityAnalysis(O) {
+        const analysis = {
+            1: '象徵開始與獨立，天生具備領導力與行動力，喜歡自己做決定，不願受限於他人。重視自我價值與成就感，適合開創型工作。需留意過度逞強或以自我為中心，學習與他人合作，能讓力量發揮得更長遠。',
+            2: '重視關係與情感連結，敏感細膩，善於傾聽與體貼他人，是團隊中的潤滑劑。擅長合作與支持，對氛圍與人際互動特別在意。需注意容易猶豫或過度迎合，建立界線與自信是成長關鍵。',
+            3: '代表創意、表達與快樂，天性樂觀，擅長語言、藝術與社交，容易成為人群焦點。喜歡分享想法與情緒，生活需要新鮮感。需留意情緒起伏與三分鐘熱度，學會專注與持續，能讓才華真正落地。',
+            4: '重視秩序、責任與穩定，是腳踏實地的實幹型人格。做事有計畫、耐力強，適合長期累積的工作。對安全感需求高。需注意過於保守或固執，適度接受變化，能讓人生結構更有彈性。',
+            5: '象徵自由與改變，熱愛新體驗，不喜歡被束縛，適應力強。對世界充滿好奇，適合多元、流動性的環境。需留意衝動與分心，若能在自由中建立紀律，將能把經驗轉化為真正的智慧。',
+            6: '重視愛、責任與家庭，天生具有照顧他人的傾向，關心他人感受，追求和諧。適合服務、教育或療癒相關角色。需注意過度付出與控制，學會先照顧自己，關係才能長久平衡。',
+            7: '代表內省與智慧，喜歡思考人生意義，對知識、真理與精神層面有高度興趣。需要獨處時間，重視內在世界。需留意與現實或他人疏離，若能將洞察落實於生活，將成為深具影響力的人。',
+            8: '象徵權力、物質與成就，具備管理能力與現實判斷力，重視效率與成果。適合領導、經營與資源整合。需留意過度追求控制或成敗得失，當學會平衡內在價值與外在成功，力量會更穩定。',
+            9: '代表大愛與完成，具有同理心與理想性，關注群體、社會與人類整體福祉。容易被需要，也渴望帶來改變。需留意情感消耗與過度犧牲，學會放下與界線，是走向成熟的重要課題。'
+        };
+        return analysis[O] || '無對應解析內容。';
+    }
+
+    /**
+     * 【新增】潛意識密碼解析邏輯 (L + I + O)
+     * 由於內容與主性格相同，直接調用
+     */
+    getSubconsciousAnalysis(code) {
+        return this.getMainPersonalityAnalysis(code);
+    }
+
+    /**
+     * 【新增】內心密碼解析邏輯 (Inner Code)
+     */
+    getInnerCodeAnalysis(code) {
+        const analysis = {
+            2: '外在表現獨立、有主見，但內心其實渴望支持與陪伴，因此在重大決定時容易缺乏信心，傾向反覆思量、等待他人給予肯定後才行動。',
+            4: '內心重視安全感與穩定，習慣透過分析與規劃來降低不安，當情緒動盪時，建立計畫或透過書寫整理思緒，反而能發揮不錯的表達能力。',
+            6: '兼具遠見與理想，表面行動力高但偶爾流於草率，內心其實對品質與成果有高度要求，對美感與物質提升特別敏感，也渴望生活越來越豐盛。',
+            8: '在順從規範與追求成就之間拉扯，規劃時往往設定宏大的目標，也因此承受較大壓力，會不斷推動自己朝目標前進並付諸實際行動。',
+            1: '內在自信且具獨立與創造能力，但容易以自我觀點為中心，加上不易接納他人意見，可能在互動中顯得較為強勢或固執。',
+            3: '內心充滿表達與連結的渴望，容易感到焦躁，想透過社交與分享來抒發情緒，但在耐心與持續力上較為不足，性格顯得多變。',
+            5: '內心嚮往自由與多元體驗，興趣廣泛且喜歡玩樂，但因堅持自身原則，容易讓人感覺不易溝通，只要不觸及底線，其實相當有彈性。',
+            7: '願意體貼與包容他人，卻常以理性與冷靜作為外在表現，內在具有強烈的正義感與關懷意識，對重要的人與事會默默放在心上。',
+            9: '對世界充滿好奇與渴望，興趣與想法豐富，容易給人慾望強烈的印象，但內心同時懷有感恩之心，也常主動關懷與幫助他人。'
+        };
+        return analysis[code] || '無對應解析內容。';
+    }
+
+    /**
+     * 【新增】外心密碼解析邏輯 (Outer Code)
+     */
+    getOuterCodeAnalysis(code) {
+        const analysis = {
+            3: '代表一個人的價值觀念\n\n傾向以情緒與氛圍作為判斷依據，帶有理想主義色彩',
+            6: '代表一個人的價值觀念\n\n重視實際成果，偏向現實主義',
+            9: '代表一個人的價值觀念\n\n對訊息、語言與整體脈絡特別敏感，具有遠見主義特質'
+        };
+        return analysis[code] || '無對應解析內容。';
     }
 }
 
