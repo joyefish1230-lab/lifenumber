@@ -217,8 +217,8 @@ class NumerologyTriangle {
         updateElement('result-subconscious', `${result.inner.L}${result.inner.I}${result.inner.O}`);
         updateElement('result-father', `${result.inner.I}${result.inner.J}${result.inner.M}`);
         updateElement('result-mother', `${result.inner.K}${result.inner.L}${result.inner.N}`);
-        updateElement('result-work', `${result.outer.S}${result.outer.T}${result.outer.U}`);
-        updateElement('result-family', `${result.outer.P}${result.outer.Q}${result.outer.R}`);
+        updateElement('result-work', `${result.outer.T}${result.outer.S}${result.outer.U}`);
+        updateElement('result-family', `${result.outer.Q}${result.outer.P}${result.outer.R}`);
         updateElement('result-elder', `${result.outer.V}${result.outer.W}${result.outer.X}`);
     }
 
